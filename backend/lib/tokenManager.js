@@ -124,30 +124,32 @@ export async function refreshAccessToken() {
       },
     });
 
-    const newLongLivedToken = data.access_token;
-    const expiresIn = data.expires_in || 5184000; // Default to 60 days for long-lived token
-
-    // Calculate different expiration dates for short and long-lived tokens
-    const shortLivedExpires = new Date(Date.now() + (expiresIn / 60) * 1000); // Short-lived: 1/60th of the long-lived token
-    const longLivedExpires = new Date(Date.now() + expiresIn * 1000); // Long-lived: Full duration
+    const newToken = data.access_token;
+    // Facebook returns expires_in value, but we're setting custom expiration times
+    
+    // Set short-lived token to expire in 30 minutes
+    const shortLivedExpires = new Date(Date.now() + 30 * 60 * 1000);
+    
+    // Set long-lived token to expire in 10 hours
+    const longLivedExpires = new Date(Date.now() + 10 * 60 * 60 * 1000);
 
     // Update existing token or create if not exists (upsert)
     await Token.updateOne(
       {},
       {
-        shortLivedToken: newLongLivedToken,
-        longLivedToken: newLongLivedToken,
+        shortLivedToken: newToken,
+        longLivedToken: newToken,
         shortLivedTokenExpiresAt: shortLivedExpires,
         longLivedTokenExpiresAt: longLivedExpires,
       },
       { upsert: true }
     );
 
-    console.log("🆕 New Access Token:", newLongLivedToken.slice(0, 30) + "...");
-    console.log("📅 Short-lived token expires:", shortLivedExpires.toLocaleString());
-    console.log("📅 Long-lived token expires:", longLivedExpires.toLocaleString());
+    console.log("🆕 New Access Token:", newToken.slice(0, 30) + "...");
+    console.log("📅 Short-lived token expires in 30 minutes:", shortLivedExpires.toLocaleString());
+    console.log("📅 Long-lived token expires in 10 hours:", longLivedExpires.toLocaleString());
     
-    return newLongLivedToken;
+    return newToken;
   } catch (err) {
     const errorMsg = `Token refresh failed!\nError: ${
       err?.response?.data?.error?.message || err.message

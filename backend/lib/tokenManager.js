@@ -125,21 +125,28 @@ export async function refreshAccessToken() {
     });
 
     const newLongLivedToken = data.access_token;
-    const expiresIn = data.expires_in || 86400; // Default to 1 day if missing
-    const expiresAt = new Date(Date.now() + expiresIn * 1000);
+    const expiresIn = data.expires_in || 5184000; // Default to 60 days for long-lived token
 
+    // Calculate different expiration dates for short and long-lived tokens
+    const shortLivedExpires = new Date(Date.now() + (expiresIn / 60) * 1000); // Short-lived: 1/60th of the long-lived token
+    const longLivedExpires = new Date(Date.now() + expiresIn * 1000); // Long-lived: Full duration
+
+    // Update existing token or create if not exists (upsert)
     await Token.updateOne(
       {},
       {
         shortLivedToken: newLongLivedToken,
         longLivedToken: newLongLivedToken,
-        shortLivedTokenExpiresAt: expiresAt,
-        longLivedTokenExpiresAt: expiresAt,
+        shortLivedTokenExpiresAt: shortLivedExpires,
+        longLivedTokenExpiresAt: longLivedExpires,
       },
       { upsert: true }
     );
 
     console.log("🆕 New Access Token:", newLongLivedToken.slice(0, 30) + "...");
+    console.log("📅 Short-lived token expires:", shortLivedExpires.toLocaleString());
+    console.log("📅 Long-lived token expires:", longLivedExpires.toLocaleString());
+    
     return newLongLivedToken;
   } catch (err) {
     const errorMsg = `Token refresh failed!\nError: ${

@@ -34,8 +34,8 @@ const Navbar = () => {
   };
 
   const handlePayout = async () => {
-    if (streakPoints < 50) {
-      setPayoutMessage("❌ You need at least 50 streak points to receive a payout.");
+    if (streakPoints < 100) {
+      setPayoutMessage("❌ You need at least 100 streak points to receive a payout.");
       return;
     }
 

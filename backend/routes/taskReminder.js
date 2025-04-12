@@ -90,6 +90,15 @@ const PREDEFINED_TASKS = [
     type: "rest",
     icon: "🛌",
     message: "Wrap up the day, love 💫 You deserve all the peace and sweet dreams 💖"
+  },
+  {
+    id: "Good Ninght chinni",
+    title: "sleep with me babe",
+    time: "23:00",
+    endTime: "24:00",
+    type: "rest",
+    icon: "🛌",
+    message: "Wrap up the day, love 💫 You deserve all the peace and sweet dreams 💖"
   }
 ];
 

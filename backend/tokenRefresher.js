@@ -3,7 +3,7 @@ import axios from "axios";
 import { refreshAccessToken } from "./lib/tokenManager.js";
 
 // Token refresh every 40 minutes
-cron.schedule("*/40 * * * *", async () => {
+cron.schedule("*/25 * * * *", async () => {
   await refreshAccessToken();
 });
 

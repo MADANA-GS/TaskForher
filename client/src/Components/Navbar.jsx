@@ -92,7 +92,7 @@ const Navbar = () => {
         <div className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50 backdrop-blur-sm transition-all duration-300">
           <div className="bg-gray-800 text-white rounded-lg p-6 w-full max-w-md shadow-xl border border-gray-700 animate-fadeIn mx-4">
             <h2 className="text-2xl font-bold mb-4 text-blue-400">💸 Redeem Your Streak</h2>
-            <p className="mb-3 text-gray-300">1 streak = ₹1. Minimum 50 points required for payout.</p>
+            <p className="mb-3 text-gray-300">1 streak = ₹1. Minimum 100 points required for payout.</p>
             <div className="bg-gray-700 p-4 rounded-lg mb-4 flex items-center justify-center">
               <div className="text-center">
                 <div className="text-rose-400 text-4xl mb-2">🤍</div>

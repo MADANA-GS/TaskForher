@@ -3,7 +3,7 @@ import axios from "axios";
 import emailjs from "emailjs-com";
 
 // Global API URL
-const API_BASE = "http://localhost:4000";
+const API_BASE = "https://taskforher.onrender.com";
 
 const Navbar = () => {
   const [streakPoints, setStreakPoints] = useState(0);

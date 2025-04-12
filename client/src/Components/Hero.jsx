@@ -17,7 +17,7 @@ import {
   getDay
 } from "date-fns";
 
-const API_BASE = "http://localhost:4000";
+const API_BASE = "https://taskforher.onrender.com";
 
 // Updated tasks with different types
 const PREDEFINED_TASKS = [

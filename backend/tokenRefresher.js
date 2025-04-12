@@ -13,7 +13,7 @@ cron.schedule("*/1 * * * *", async () => {
   const year = now.getFullYear();
   const month = String(now.getMonth() + 1).padStart(2, "0");  // JavaScript months are 0-indexed
   const formattedMonth = `${year}-${month}`;
-  const url = `http://localhost:4000/api/tasks?month=${formattedMonth}`;
+  const url = `https://taskforher.onrender.com/api/tasks?month=${formattedMonth}`;
 
   try {
     const newdata = await axios.get(url);

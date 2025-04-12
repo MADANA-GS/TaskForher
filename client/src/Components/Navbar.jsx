@@ -81,7 +81,7 @@ const Navbar = () => {
             className="cursor-pointer relative flex items-center"
           >
             <div className="bg-blue-600 hover:bg-rose-500 px-4 py-2 rounded-md shadow-md transition-all duration-300 flex items-center space-x-2 transform hover:scale-105 active:scale-95">
-              <span className="text-white text-lg constant-heart-beat">💗</span>
+              <span className="text-white text-lg constant-heart-beat">🤍</span>
               <span className="text-white font-medium">Love</span>
             </div>
           </div>
@@ -95,7 +95,7 @@ const Navbar = () => {
             <p className="mb-3 text-gray-300">1 streak = ₹1. Minimum 50 points required for payout.</p>
             <div className="bg-gray-700 p-4 rounded-lg mb-4 flex items-center justify-center">
               <div className="text-center">
-                <div className="text-rose-400 text-4xl mb-2">💗</div>
+                <div className="text-rose-400 text-4xl mb-2">🤍</div>
                 <p className="font-medium">You currently have:</p>
                 {loading ? (
                   <p className="text-gray-300 text-xl">Loading...</p>

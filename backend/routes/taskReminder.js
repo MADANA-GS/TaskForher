@@ -17,34 +17,35 @@ const PREDEFINED_TASKS = [
     endTime: "07:30",
     type: "hydration",
     icon: "💧",
-    message: "Hey love, time to hydrate that cute body of yours 😘"
+    message: "Hey love, time to hydrate that cute body of yours 😘",
   },
   {
     id: "stretch",
     title: "Do light morning stretches",
     time: "07:30",
-    endTime: "08:00", // Adjusted for no overlap with breakfast
+    endTime: "08:00",
     type: "exercise",
     icon: "🧘‍♀️",
-    message: "Let’s loosen up those pretty limbs 🌞 You’re my yoga queen 😍"
+    message: "Let’s loosen up those pretty limbs 🌞 You’re my yoga queen 😍",
   },
   {
     id: "breakfast",
     title: "Have a healthy breakfast",
-    time: "08:00", // Adjusted to start right after stretching
+    time: "08:00",
     endTime: "09:00",
     type: "nutrition",
     icon: "🥣",
-    message: "Feed that gorgeous soul and body — you’re glowing already 🌸✨"
+    message: "Feed that gorgeous soul and body — you’re glowing already 🌸✨",
   },
   {
-    id: "Churu love madana ba",
-    title: "Talk one hour with Your handsome boyfriend 😁😁",
+    id: "churu_love",
+    title: "Talk one hour with your handsome boyfriend 😁😁",
     time: "18:00",
     endTime: "19:00",
-    type: "Love",
+    type: "love",
     icon: "💗",
-    message: "Let’s get smarter together, baby. You’re going to ace everything! 😘📖"
+    message:
+      "Let’s get smarter together, baby. You’re going to ace everything! 😘📖",
   },
   {
     id: "water_afternoon",
@@ -53,7 +54,7 @@ const PREDEFINED_TASKS = [
     endTime: "13:15",
     type: "hydration",
     icon: "🚰",
-    message: "Midday hydration reminder from your no.1 fan 😘"
+    message: "Midday hydration reminder from your no.1 fan 😘",
   },
   {
     id: "walk",
@@ -62,7 +63,7 @@ const PREDEFINED_TASKS = [
     endTime: "18:00",
     type: "exercise",
     icon: "🚶‍♀️",
-    message: "Take those dreamy steps, queen 💃 The world deserves to see you!"
+    message: "Take those dreamy steps, queen 💃 The world deserves to see you!",
   },
   {
     id: "water_evening",
@@ -71,7 +72,8 @@ const PREDEFINED_TASKS = [
     endTime: "19:15",
     type: "hydration",
     icon: "🫗",
-    message: "One more sip for that perfect glow ✨ You're too pretty to be dehydrated 😘"
+    message:
+      "One more sip for that perfect glow ✨ You're too pretty to be dehydrated 😘",
   },
   {
     id: "study",
@@ -80,7 +82,8 @@ const PREDEFINED_TASKS = [
     endTime: "21:00",
     type: "learning",
     icon: "📚",
-    message: "Let’s get smarter together, baby. You’re going to ace everything! 😘📖"
+    message:
+      "Let’s get smarter together, baby. You’re going to ace everything! 😘📖",
   },
   {
     id: "sleep_prep",
@@ -89,25 +92,25 @@ const PREDEFINED_TASKS = [
     endTime: "22:00",
     type: "rest",
     icon: "🛌",
-    message: "Wrap up the day, love 💫 You deserve all the peace and sweet dreams 💖"
+    message:
+      "Wrap up the day, love 💫 You deserve all the peace and sweet dreams 💖",
   },
   {
-    id: "Good Ninght chinni",
-    title: "sleep with me babe",
+    id: "goodnight_chinni",
+    title: "Sleep with me babe",
     time: "23:00",
-    endTime: "24:00",
+    endTime: "00:00",
     type: "rest",
     icon: "🛌",
-    message: "Wrap up the day, love 💫 You deserve all the peace and sweet dreams 💖"
-  }
+    message: "Cuddle mode activated 🥰 Close your eyes and dream of us 💖",
+  },
 ];
 
-
-// Send custom task reminder
+// === Send WhatsApp Message Function ===
 async function sendTaskMessage(task) {
   const token = await getAccessToken();
   if (!token) {
-    console.log("❌ No token available");
+    console.log("❌ No token available. Cannot send task:", task.title);
     return;
   }
 
@@ -116,10 +119,11 @@ async function sendTaskMessage(task) {
     to: process.env.RECIPIENT_NUMBER,
     type: "text",
     text: {
-      body: `⏰ Reminder: ${task.icon} ${task.title} (${task.time} - ${
+      body: `⏰ Reminder: ${task.icon} ${task.title}\n🕒 ${task.time} - ${
         task.endTime
-      } , ${task.message})
-      click this link: to get cash eeee ${process.env.URL || "https://task-forher.vercel.app"}`,
+      }\n💌 ${
+        task.message
+      }\n\n👉 Click here for your surprise gift: ${"https://task-forher.vercel.app"}`,
     },
   };
 
@@ -137,23 +141,23 @@ async function sendTaskMessage(task) {
     console.log(`✅ Sent: ${task.title}`, response.data);
   } catch (error) {
     console.error(
-      `❌ Failed: ${task.title}`,
+      `❌ Failed to send: ${task.title}`,
       error?.response?.data || error.message
     );
   }
 }
 
-// POST /send-task-reminder - Send all reminders manually
+// === Manual Endpoint: Send All Tasks ===
 remainderRouter.post("/send-task-reminder", async (req, res) => {
-  console.log("🔔 Sending all predefined task reminders...");
+  console.log("📨 Sending all predefined task reminders...");
   for (const task of PREDEFINED_TASKS) {
     console.log(`👉 Sending: ${task.title}`);
     await sendTaskMessage(task);
   }
-  res.json({ success: true, message: "All tasks sent." });
+  res.json({ success: true, message: "All tasks sent manually." });
 });
 
-// POST /send-template - Send WhatsApp template message
+// === WhatsApp Template Message Test ===
 remainderRouter.post("/send-template", async (req, res) => {
   const token = await getAccessToken();
   if (!token) {
@@ -194,10 +198,10 @@ remainderRouter.post("/send-template", async (req, res) => {
   }
 });
 
-// CRON: Every minute, check and send tasks matching current time
+// === Auto CRON Job: Runs Every Minute to Match Task Time ===
 cron.schedule("* * * * *", async () => {
   const now = dayjs().format("HH:mm");
-  console.log("🕐 Checking tasks for:", now);
+  console.log(`⏳ Checking tasks at: ${now}`);
   const currentTasks = PREDEFINED_TASKS.filter((task) => task.time === now);
   for (const task of currentTasks) {
     console.log(`🔔 Auto-sending: ${task.title}`);

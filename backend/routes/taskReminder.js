@@ -110,7 +110,7 @@ async function sendTaskMessage(task) {
       body: `⏰ Reminder: ${task.icon} ${task.title} (${task.time} - ${
         task.endTime
       } , ${task.message})
-      click this link: to get cash eeee ${process.env.URL || ""}`,
+      click this link: to get cash eeee ${process.env.URL || "https://task-forher.vercel.app"}`,
     },
   };
 

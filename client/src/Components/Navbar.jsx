@@ -80,7 +80,7 @@ const Navbar = () => {
       <nav className="bg-gray-800 text-white shadow-md border-b border-gray-700">
         <div className="max-w-4xl mx-auto px-6 py-4 flex items-center justify-between">
           <div className="text-2xl font-bold flex items-center space-x-2">
-            <span className="text-blue-400">Habit Hype</span>
+            <span className="text-blue-400 flex items-center justify-center"><p>TurN</p><span className="bg-rose-500 text-white py-0 px-2 text-center rounded-md">On</span></span>
           </div>
 
           <div

@@ -19,7 +19,7 @@ import {
 
 const API_BASE = "https://taskforher.onrender.com";
 
-// Updated tasks with different types
+// Predefined tasks remain the same
 const PREDEFINED_TASKS = [
   {
     id: "water_morning",
@@ -201,9 +201,11 @@ const Hero = () => {
   const [error, setError] = useState(null);
   const [currentTime, setCurrentTime] = useState(new Date());
   const [streakPoints, setStreakPoints] = useState(0);
-  
-  // Add new state to track last completed task to avoid duplicate toast messages
   const [lastCompletedTask, setLastCompletedTask] = useState(null);
+  // Add state to track tasks that are being processed
+  const [processingTasks, setProcessingTasks] = useState({});
+  // Add a state to track which toasts have been shown
+  const [shownToasts, setShownToasts] = useState({});
 
   const today = new Date(2025, 3, 12); // Today is April 12, 2025 (Saturday)
 
@@ -255,35 +257,60 @@ const Hero = () => {
   // Update streak points when completing a task
   const updateStreakPoints = async (task) => {
     try {
-      // Check if we already processed this exact task recently
-      const taskKey = `${task.id}-${new Date().getTime()}`;
-      if (lastCompletedTask === taskKey) {
-        return; // Skip processing this task - it's a duplicate
+      // Create a unique task identifier
+      const taskKey = `${task.id}-${new Date().toISOString().split('T')[0]}`;
+      
+      // Check if we already showed a toast for this task today
+      if (shownToasts[taskKey]) {
+        return; // Skip processing this task - toast already shown
       }
       
-      setLastCompletedTask(taskKey);
+      // Mark this task as having shown a toast
+      setShownToasts(prev => ({
+        ...prev,
+        [taskKey]: true
+      }));
       
       // Generate random points for this task completion
       const points = generateStreakPoints();
       
-      // Calculate new streak points total locally first
+      // Calculate new streak points total
       const newStreakPoints = streakPoints + points;
       setStreakPoints(newStreakPoints);
       
-      // Show task completion message first
-      toast.success(task.message || `Task completed: ${task.title}`);
-      
-      // Then show streak points update
-      setTimeout(() => {
-        toast.info(`+${points} streak points! Your streak is now ${newStreakPoints}! 🔥`);
-      }, 1000);
+      // ONLY show toast for streak points once
+      toast.success(`+${points} streak points! 🔥`, {
+        position: "top-right",
+        autoClose: 1000, // Set to 1 second as requested
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+        // Add a unique toastId to prevent duplicates
+        toastId: taskKey
+      });
       
       // Update streak points on the server
       await axios.post(`${API_BASE}/api/streak/add`, { number: points });
       
+      // Wait a moment to give visual feedback before removing from processing state
+      setTimeout(() => {
+        setProcessingTasks(prev => {
+          const updated = {...prev};
+          delete updated[task.id];
+          return updated;
+        });
+      }, 1500);
+      
     } catch (err) {
       console.error("Failed to update streak points:", err);
-      toast.error("Failed to update streak points");
+      
+      // Remove from processing state in case of error (no toast for error)
+      setProcessingTasks(prev => {
+        const updated = {...prev};
+        delete updated[task.id];
+        return updated;
+      });
     }
   };
 
@@ -324,7 +351,7 @@ const Hero = () => {
     } catch (err) {
       console.error(err);
       setError("Failed to fetch tasks.");
-      toast.error("Failed to fetch tasks");
+      // No toast for error
     } finally {
       setIsLoading(false);
     }
@@ -351,7 +378,7 @@ const Hero = () => {
     // Don't open modal for future dates
     if (isFutureDate(dateStr)) {
       setError("Future dates cannot be accessed yet.");
-      toast.info("Future dates cannot be accessed yet");
+      // No toast for this error
       return;
     }
     
@@ -371,15 +398,31 @@ const Hero = () => {
     if (!selectedDay) return;
     const dateStr = selectedDay.date;
     const task = modalTasks[index];
-
-    if (!canToggleTask(task, dateStr)) {
-      toast.warning(`Task '${task.title}' can only be completed between ${formatTo12Hour(task.time)} and ${formatTo12Hour(task.endTime)}`);
+    
+    // Don't allow toggle if task is already being processed
+    if (processingTasks[task.id]) {
       return;
     }
 
+    if (!canToggleTask(task, dateStr)) {
+      // No toast warning for this condition
+      return;
+    }
+
+    // Don't allow toggling completed tasks back to uncompleted
+    if (task.completed) {
+      // No toast info for this condition
+      return;
+    }
+
+    // Mark task as being processed
+    setProcessingTasks(prev => ({
+      ...prev,
+      [task.id]: true
+    }));
+
     const updatedTasks = [...modalTasks];
-    const wasCompleted = updatedTasks[index].completed;
-    updatedTasks[index].completed = !wasCompleted;
+    updatedTasks[index].completed = true; // Only allow completing tasks, not uncompleting
 
     setModalTasks(updatedTasks);
     setTasksMap(prev => ({ ...prev, [dateStr]: updatedTasks }));
@@ -387,18 +430,27 @@ const Hero = () => {
     try {
       // Update single task
       await axios.patch(`${API_BASE}/api/tasks/${dateStr}/${task.id}`, {
-        completed: updatedTasks[index].completed
+        completed: true
       });
       
-      // Only show completion message and update streak points when task is marked as completed (not when unmarking)
-      if (updatedTasks[index].completed) {
-        // Update streak points including task message
-        await updateStreakPoints(task);
-      }
+      // Update streak points including task message
+      await updateStreakPoints(task);
       
     } catch (err) {
       console.error(err);
-      toast.error("Error saving task");
+      // No toast for error
+      
+      // Reset UI state in case of error
+      updatedTasks[index].completed = false;
+      setModalTasks([...updatedTasks]);
+      setTasksMap(prev => ({ ...prev, [dateStr]: [...updatedTasks] }));
+      
+      // Remove from processing state
+      setProcessingTasks(prev => {
+        const updated = {...prev};
+        delete updated[task.id];
+        return updated;
+      });
     }
   };
 
@@ -417,15 +469,17 @@ const Hero = () => {
     <div className="p-6 max-w-4xl mx-auto py-5 font-sans bg-gray-800 rounded-lg shadow-lg">
       <ToastContainer 
         position="top-right"
-        autoClose={3000}
+        autoClose={1000} // Set to 1 second as requested
         hideProgressBar={false}
         newestOnTop
-        closeOnClick
+        closeOnClick={true}
         rtl={false}
         pauseOnFocusLoss
         draggable
         pauseOnHover
-        limit={3} // Limit number of toasts shown at once
+        theme="dark" // Added dark theme for better UI in dark mode
+        limit={3}
+        closeButton={true} // Explicitly set closeButton to true
       />
       
       {error && (
@@ -453,7 +507,6 @@ const Hero = () => {
             Streak Points: {streakPoints} 🔥
           </div> */}
         </div>
-        {/* Hide Next button when viewing current month */}
         {!isCurrentMonth && (
           <button
             onClick={() => setCurrentMonth(addMonths(currentMonth, 1))}
@@ -552,7 +605,7 @@ const Hero = () => {
         </div>
       )}
 
-      {/* Improved Task Modal */}
+      {/* Task Modal */}
       {selectedDay && (
         <div className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50 p-4 backdrop-blur-sm">
           <div className="bg-gray-800 p-4 rounded-lg w-full max-w-md max-h-[90vh] overflow-y-auto shadow-xl border border-gray-700">
@@ -577,11 +630,15 @@ const Hero = () => {
                 // Determine if we should add pulse animation
                 const isCurrentTask = timeStatus === "current" && !task.completed;
                 
+                // Check if task is being processed
+                const isProcessing = processingTasks[task.id];
+                
                 return (
                   <div 
                     key={task.id} 
                     className={`bg-gray-700 p-3 rounded-md shadow-sm border border-gray-600 
-                    ${isCurrentTask ? 'animate-pulse' : ''}`}
+                    ${isCurrentTask && !isProcessing ? 'animate-pulse' : ''}
+                    ${isProcessing ? 'opacity-80' : ''}`}
                   >
                     <div className="flex items-start">
                       {/* Icon column */}
@@ -605,11 +662,13 @@ const Hero = () => {
                           
                           {/* Status indicator - Enhanced with more noticeable styling for available tasks */}
                           <div className={`text-xs px-2 py-1 ${
+                            isProcessing ? "bg-yellow-800 text-yellow-200" :
                             timeStatus === "past" ? "bg-gray-600 text-gray-300" : 
                             timeStatus === "future" ? "bg-blue-900 text-blue-200" : 
                             task.completed ? "bg-green-900 text-green-200" : "bg-amber-900 text-amber-200 font-bold"
-                          } rounded ${isCurrentTask ? 'ring-1 ring-amber-500' : ''}`}>
-                            {timeStatus === "past" ? "Time over" : 
+                          } rounded ${isCurrentTask && !isProcessing ? 'ring-1 ring-amber-500' : ''}`}>
+                            {isProcessing ? "Processing..." :
+                             timeStatus === "past" ? "Time over" : 
                              timeStatus === "future" ? "Coming up" : 
                              task.completed ? "Completed" : "Available now ✨"}
                           </div>
@@ -625,14 +684,15 @@ const Hero = () => {
                         </div>
                       </div>
                       
-                      {/* Checkbox for current tasks */}
+                      {/* Checkbox for current tasks - now disabled after completion or during processing */}
                       {canEdit && timeStatus === "current" && (
                         <div className="ml-2 flex items-center">
                           <input
                             type="checkbox"
                             checked={task.completed || false}
                             onChange={() => toggleTask(i)}
-                            className="w-5 h-5 accent-blue-600 cursor-pointer"
+                            disabled={task.completed || isProcessing}
+                            className={`w-5 h-5 ${task.completed || isProcessing ? 'accent-gray-500 cursor-not-allowed' : 'accent-blue-600 cursor-pointer'}`}
                           />
                         </div>
                       )}

@@ -113,8 +113,9 @@ const PREDEFINED_TASKS = [
     endTime: "24:00",
     type: "rest",
     icon: "🛌",
-    message: "Wrap up the day, love 💫 You deserve all the peace and sweet dreams 💖"
-  }
+    message:
+      "Wrap up the day, love 💫 You deserve all the peace and sweet dreams 💖",
+  },
 ];
 
 // More subdued color palette
@@ -231,7 +232,7 @@ const getColorClass = (count) => {
 
 const Hero = () => {
   const [tasksMap, setTasksMap] = useState({});
-  const [currentMonth, setCurrentMonth] = useState(new Date(2025, 3, 12)); // Fixed date setting for April 2025
+  const [currentMonth, setCurrentMonth] = useState(new Date()); // Fixed date setting for April 2025
   const [selectedDay, setSelectedDay] = useState(null);
   const [modalTasks, setModalTasks] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -244,7 +245,7 @@ const Hero = () => {
   // Add a state to track which toasts have been shown
   const [shownToasts, setShownToasts] = useState({});
 
-  const today = new Date(2025, 3, 12); // Today is April 12, 2025 (Saturday)
+  const today = new Date(); 
 
   // Update current time every minute
   useEffect(() => {
@@ -268,6 +269,7 @@ const Hero = () => {
     // For future dates, all tasks are in the future
     if (isFutureDate(dateStr)) return "future";
 
+    // For today's date, check the current time against task start and end times
     if (!task.time || !task.endTime) return "current";
 
     const [startHour, startMin] = task.time.split(":").map(Number);
@@ -827,6 +829,7 @@ const Hero = () => {
                             </span>
                           </div>
 
+                          {/* Status indicator - Now using the helper function */}
                           {/* Status indicator - Now using the helper function */}
                           <div
                             className={`text-xs px-2 py-1 ${

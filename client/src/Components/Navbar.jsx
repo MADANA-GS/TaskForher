@@ -10,7 +10,6 @@ const Navbar = () => {
   const [showPopup, setShowPopup] = useState(false);
   const [payoutMessage, setPayoutMessage] = useState("");
   const [loading, setLoading] = useState(false);
-  const [heartBeating, setHeartBeating] = useState(false);
 
   useEffect(() => {
     fetchStreak();
@@ -65,14 +64,8 @@ const Navbar = () => {
   };
 
   const handleOpenPopup = () => {
-    setHeartBeating(true);
-    
-    // Reset beating effect after animation completes
-    setTimeout(() => {
-      setHeartBeating(false);
-      fetchStreak(); // Refresh streak points when opening the popup
-      setShowPopup(true);
-    }, 800);
+    fetchStreak(); // Refresh streak points
+    setShowPopup(true);
   };
 
   return (
@@ -88,7 +81,7 @@ const Navbar = () => {
             className="cursor-pointer relative flex items-center"
           >
             <div className="bg-blue-600 hover:bg-rose-500 px-4 py-2 rounded-md shadow-md transition-all duration-300 flex items-center space-x-2 transform hover:scale-105 active:scale-95">
-              <span className={`text-white text-lg ${heartBeating ? 'heart-beat' : ''}`}>💗</span>
+              <span className="text-white text-lg constant-heart-beat">💗</span>
               <span className="text-white font-medium">Love</span>
             </div>
           </div>
@@ -140,26 +133,6 @@ const Navbar = () => {
           </div>
         </div>
       )}
-
-      <style jsx>{`
-        .animate-fadeIn {
-          animation: fadeIn 0.3s ease-out;
-        }
-        @keyframes fadeIn {
-          from { opacity: 0; transform: scale(0.95); }
-          to { opacity: 1; transform: scale(1); }
-        }
-        .heart-beat {
-          animation: heartBeat 0.8s cubic-bezier(0.215, 0.61, 0.355, 1);
-        }
-        @keyframes heartBeat {
-          0% { transform: scale(1); }
-          14% { transform: scale(1.3); }
-          28% { transform: scale(1); }
-          42% { transform: scale(1.3); }
-          70% { transform: scale(1); }
-        }
-      `}</style>
     </>
   );
 };

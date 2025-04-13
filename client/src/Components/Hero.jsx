@@ -49,8 +49,8 @@ const PREDEFINED_TASKS = [
     message: "Feed that gorgeous soul and body — you're glowing already 🌸✨",
   },
   {
-    id: "Churu love madana ba",
-    title: "Talk one hour with Your handsome boyfriend 😁😁",
+    id: "churu_love",
+    title: "Talk one hour with your handsome boyfriend 😁😁",
     time: "18:00",
     endTime: "19:00",
     type: "love",
@@ -70,7 +70,7 @@ const PREDEFINED_TASKS = [
   {
     id: "walk",
     title: "Take a short walk",
-    time: "17:00",
+    time: "17:30",
     endTime: "18:00",
     type: "exercise",
     icon: "🚶‍♀️",
@@ -107,17 +107,15 @@ const PREDEFINED_TASKS = [
       "Wrap up the day, love 💫 You deserve all the peace and sweet dreams 💖",
   },
   {
-    id: "Good Ninght chinni",
-    title: "sleep with me babe",
+    id: "goodnight_chinni",
+    title: "Sleep with me babe",
     time: "23:00",
-    endTime: "24:00",
+    endTime: "00:00",
     type: "rest",
     icon: "🛌",
-    message:
-      "Wrap up the day, love 💫 You deserve all the peace and sweet dreams 💖",
+    message: "Cuddle mode activated 🥰 Close your eyes and dream of us 💖",
   },
 ];
-
 // More subdued color palette
 const TYPE_COLORS = {
   hydration: {

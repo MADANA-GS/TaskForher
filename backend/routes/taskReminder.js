@@ -2,8 +2,17 @@ import express from "express";
 import axios from "axios";
 import cron from "node-cron";
 import dayjs from "dayjs";
+import utc from "dayjs/plugin/utc.js";
+import timezone from "dayjs/plugin/timezone.js";
 import dotenv from "dotenv";
 import { getAccessToken } from "../lib/tokenManager.js";
+
+// Configure dayjs with timezone plugins
+dayjs.extend(utc);
+dayjs.extend(timezone);
+
+// Configure your local timezone here
+const LOCAL_TIMEZONE = "Asia/Kolkata"; // Change this to your timezone (e.g., "Asia/Kolkata" for India)
 
 dotenv.config();
 
@@ -106,15 +115,23 @@ const PREDEFINED_TASKS = [
   },
 ];
 
-// Track the last time each task was sent (using task ID as key)
-const lastSent = {};
+// Track tasks that have been sent for today
+const sentTasksToday = new Set();
+
+// Function to get today's date string
+function getTodayDateString() {
+  return dayjs().tz(LOCAL_TIMEZONE).format('YYYY-MM-DD');
+}
+
+// Reset tracking at midnight in the local timezone
+let currentDateString = getTodayDateString();
 
 // === Send WhatsApp Message Function ===
 async function sendTaskMessage(task) {
   const token = await getAccessToken();
   if (!token) {
     console.log("❌ No token available. Cannot send task:", task.title);
-    return;
+    return false;
   }
 
   const messageData = {
@@ -143,8 +160,8 @@ async function sendTaskMessage(task) {
     );
     console.log(`✅ Sent: ${task.title}`, response.data);
     
-    // Record when this task was last sent
-    lastSent[task.id] = new Date().toISOString();
+    // Mark this task as sent for today
+    sentTasksToday.add(task.id);
     
     return true;
   } catch (error) {
@@ -156,36 +173,41 @@ async function sendTaskMessage(task) {
   }
 }
 
-// === Manual Endpoint: Send Specific Task ===
-remainderRouter.post("/send-specific-task", async (req, res) => {
-  const { taskId } = req.body;
-  if (!taskId) {
-    return res.status(400).json({ error: "Task ID is required" });
-  }
-
-  const task = PREDEFINED_TASKS.find(t => t.id === taskId);
-  if (!task) {
-    return res.status(404).json({ error: "Task not found" });
-  }
-
-  const success = await sendTaskMessage(task);
-  if (success) {
-    res.json({ success: true, message: `Task "${task.title}" sent successfully.` });
-  } else {
-    res.status(500).json({ error: "Failed to send task message" });
-  }
-});
-
 // === Manual Endpoint: Send All Tasks ===
 remainderRouter.post("/send-task-reminder", async (req, res) => {
   console.log("📨 Sending all predefined task reminders...");
   const results = [];
+  
   for (const task of PREDEFINED_TASKS) {
     console.log(`👉 Sending: ${task.title}`);
     const success = await sendTaskMessage(task);
     results.push({ taskId: task.id, title: task.title, success });
   }
+  
   res.json({ success: true, message: "All tasks sent manually.", results });
+});
+
+// === Manual Endpoint: Send Specific Task ===
+remainderRouter.post("/send-specific-task", async (req, res) => {
+  const { taskId } = req.body;
+  
+  if (!taskId) {
+    return res.status(400).json({ error: "Task ID is required" });
+  }
+
+  const task = PREDEFINED_TASKS.find(t => t.id === taskId);
+  
+  if (!task) {
+    return res.status(404).json({ error: "Task not found" });
+  }
+
+  const success = await sendTaskMessage(task);
+  
+  if (success) {
+    res.json({ success: true, message: `Task "${task.title}" sent successfully.` });
+  } else {
+    res.status(500).json({ error: "Failed to send task message" });
+  }
 });
 
 // === WhatsApp Template Message Test ===
@@ -229,71 +251,61 @@ remainderRouter.post("/send-template", async (req, res) => {
   }
 });
 
-// Helper function to check if a task should be sent now
-function shouldSendTask(task) {
-  // Parse the task time
-  const [taskHour, taskMinute] = task.time.split(":").map(num => parseInt(num, 10));
+// Check if it's a new day and reset tracking if needed
+function checkAndResetTracking() {
+  const newDateString = getTodayDateString();
   
-  // Get current time
-  const now = new Date();
-  const currentHour = now.getHours();
-  const currentMinute = now.getMinutes();
-  
-  // Check if the current time matches the task time exactly
-  return currentHour === taskHour && currentMinute === taskMinute;
-}
-
-// Helper function to check if this task was already sent today
-function wasTaskSentToday(taskId) {
-  if (!lastSent[taskId]) {
-    return false;
+  if (newDateString !== currentDateString) {
+    console.log(`🌞 New day detected! (${currentDateString} → ${newDateString}). Resetting task tracking.`);
+    sentTasksToday.clear();
+    currentDateString = newDateString;
   }
-  
-  const lastSentDate = new Date(lastSent[taskId]);
-  const now = new Date();
-  
-  return lastSentDate.getDate() === now.getDate() && 
-         lastSentDate.getMonth() === now.getMonth() && 
-         lastSentDate.getFullYear() === now.getFullYear();
 }
-
-// Reset the lastSent record at midnight
-function scheduleResetForMidnight() {
-  const now = new Date();
-  const night = new Date(
-    now.getFullYear(),
-    now.getMonth(),
-    now.getDate() + 1, // tomorrow
-    0, 0, 0 // midnight
-  );
-  
-  const msToMidnight = night.getTime() - now.getTime();
-  
-  setTimeout(() => {
-    console.log("🌙 Midnight reset: Clearing lastSent record for new day");
-    Object.keys(lastSent).forEach(key => {
-      delete lastSent[key];
-    });
-    scheduleResetForMidnight(); // schedule next reset
-  }, msToMidnight);
-}
-
-// Start the midnight reset scheduler
-scheduleResetForMidnight();
 
 // === Auto CRON Job: Runs Every Minute to Match Task Time ===
 cron.schedule("* * * * *", async () => {
-  const now = new Date();
-  const formattedTime = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
-  console.log(`⏳ Checking tasks at: ${formattedTime}`);
-
-  for (const task of PREDEFINED_TASKS) {
-    // Only send if this exact time matches the task time and it hasn't been sent today
-    if (shouldSendTask(task) && !wasTaskSentToday(task.id)) {
-      console.log(`🔔 It's time for task: ${task.id} - ${task.title} at ${formattedTime}`);
-      await sendTaskMessage(task);
+  try {
+    // First check if we need to reset for a new day
+    checkAndResetTracking();
+    
+    // Get current time in the correct timezone
+    const now = dayjs().tz(LOCAL_TIMEZONE);
+    const localTime = now.format("HH:mm");
+    const serverTime = dayjs().format("HH:mm");
+    
+    console.log(`⏳ Checking tasks at: ${localTime} (server time: ${serverTime})`);
+    
+    // Check each task
+    for (const task of PREDEFINED_TASKS) {
+      // Skip if already sent today
+      if (sentTasksToday.has(task.id)) {
+        continue;
+      }
+      
+      // Check if it's time to send this task
+      if (task.time === localTime) {
+        console.log(`🔔 It's time for task: ${task.title} at ${localTime}`);
+        await sendTaskMessage(task);
+      }
     }
+  } catch (error) {
+    console.error("❌ Error in cron job:", error);
   }
+});
+
+// Debug endpoint to show timezone information
+remainderRouter.get("/debug-time", (req, res) => {
+  const serverTime = new Date();
+  const localTime = dayjs().tz(LOCAL_TIMEZONE);
+  
+  res.json({
+    serverTime: serverTime.toString(),
+    serverTimeRaw: serverTime.toISOString(),
+    localTimezone: LOCAL_TIMEZONE,
+    localTime: localTime.format(),
+    localTimeFormatted: localTime.format("YYYY-MM-DD HH:mm:ss"),
+    sentTasksToday: Array.from(sentTasksToday)
+  });
 });
 
 export default remainderRouter;

@@ -26,7 +26,7 @@ const PREDEFINED_TASKS = [
     endTime: "08:00",
     type: "exercise",
     icon: "🧘‍♀️",
-    message: "Let’s loosen up those pretty limbs 🌞 You’re my yoga queen 😍",
+    message: "Let's loosen up those pretty limbs 🌞 You're my yoga queen 😍",
   },
   {
     id: "breakfast",
@@ -35,7 +35,7 @@ const PREDEFINED_TASKS = [
     endTime: "09:00",
     type: "nutrition",
     icon: "🥣",
-    message: "Feed that gorgeous soul and body — you’re glowing already 🌸✨",
+    message: "Feed that gorgeous soul and body — you're glowing already 🌸✨",
   },
   {
     id: "churu_love",
@@ -45,7 +45,7 @@ const PREDEFINED_TASKS = [
     type: "love",
     icon: "💗",
     message:
-      "Let’s get smarter together, baby. You’re going to ace everything! 😘📖",
+      "Let's get smarter together, baby. You're going to ace everything! 😘📖",
   },
   {
     id: "water_afternoon",
@@ -83,7 +83,7 @@ const PREDEFINED_TASKS = [
     type: "learning",
     icon: "📚",
     message:
-      "Let’s get smarter together, baby. You’re going to ace everything! 😘📖",
+      "Let's get smarter together, baby. You're going to ace everything! 😘📖",
   },
   {
     id: "sleep_prep",
@@ -105,6 +105,11 @@ const PREDEFINED_TASKS = [
     message: "Cuddle mode activated 🥰 Close your eyes and dream of us 💖",
   },
 ];
+
+// Track tasks that have been sent to avoid duplicate messages
+const sentTasks = new Set();
+const resetDateKey = () => dayjs().format('YYYY-MM-DD');
+let currentDateKey = resetDateKey();
 
 // === Send WhatsApp Message Function ===
 async function sendTaskMessage(task) {
@@ -198,14 +203,51 @@ remainderRouter.post("/send-template", async (req, res) => {
   }
 });
 
+// Checks if a new day has started, resets tracking if needed
+function checkAndResetDay() {
+  const newDateKey = resetDateKey();
+  if (newDateKey !== currentDateKey) {
+    console.log("🌞 New day detected! Resetting sent tasks tracker.");
+    sentTasks.clear();
+    currentDateKey = newDateKey;
+  }
+}
+
 // === Auto CRON Job: Runs Every Minute to Match Task Time ===
 cron.schedule("* * * * *", async () => {
-  const now = dayjs().format("HH:mm");
-  console.log(`⏳ Checking tasks at: ${now}`);
-  const currentTasks = PREDEFINED_TASKS.filter((task) => task.time === now);
-  for (const task of currentTasks) {
-    console.log(`🔔 Auto-sending: ${task.title}`);
-    await sendTaskMessage(task);
+  try {
+    // Check if it's a new day
+    checkAndResetDay();
+    
+    const now = dayjs();
+    const currentHour = now.hour();
+    const currentMinute = now.minute();
+    const formattedTime = now.format("HH:mm");
+    
+    console.log(`⏳ Checking tasks at: ${formattedTime}`);
+    
+    // Check for tasks that should be sent now
+    for (const task of PREDEFINED_TASKS) {
+      const [taskHour, taskMinute] = task.time.split(":").map(Number);
+      
+      // If this task's time matches the current time and hasn't been sent today
+      if (taskHour === currentHour && taskMinute === currentMinute) {
+        const taskKey = `${currentDateKey}-${task.id}`;
+        
+        // Check if we've already sent this task today
+        if (!sentTasks.has(taskKey)) {
+          console.log(`🔔 Sending task: ${task.title} at ${formattedTime}`);
+          await sendTaskMessage(task);
+          
+          // Mark this task as sent for today
+          sentTasks.add(taskKey);
+        } else {
+          console.log(`⏭️ Task already sent today: ${task.title}`);
+        }
+      }
+    }
+  } catch (error) {
+    console.error("❌ Error in cron job:", error);
   }
 });
 

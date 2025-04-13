@@ -106,10 +106,8 @@ const PREDEFINED_TASKS = [
   },
 ];
 
-// Track tasks that have been sent to avoid duplicate messages
-const sentTasks = new Set();
-const resetDateKey = () => dayjs().format('YYYY-MM-DD');
-let currentDateKey = resetDateKey();
+// Track the last time each task was sent (using task ID as key)
+const lastSent = {};
 
 // === Send WhatsApp Message Function ===
 async function sendTaskMessage(task) {
@@ -144,22 +142,50 @@ async function sendTaskMessage(task) {
       }
     );
     console.log(`✅ Sent: ${task.title}`, response.data);
+    
+    // Record when this task was last sent
+    lastSent[task.id] = new Date().toISOString();
+    
+    return true;
   } catch (error) {
     console.error(
       `❌ Failed to send: ${task.title}`,
       error?.response?.data || error.message
     );
+    return false;
   }
 }
+
+// === Manual Endpoint: Send Specific Task ===
+remainderRouter.post("/send-specific-task", async (req, res) => {
+  const { taskId } = req.body;
+  if (!taskId) {
+    return res.status(400).json({ error: "Task ID is required" });
+  }
+
+  const task = PREDEFINED_TASKS.find(t => t.id === taskId);
+  if (!task) {
+    return res.status(404).json({ error: "Task not found" });
+  }
+
+  const success = await sendTaskMessage(task);
+  if (success) {
+    res.json({ success: true, message: `Task "${task.title}" sent successfully.` });
+  } else {
+    res.status(500).json({ error: "Failed to send task message" });
+  }
+});
 
 // === Manual Endpoint: Send All Tasks ===
 remainderRouter.post("/send-task-reminder", async (req, res) => {
   console.log("📨 Sending all predefined task reminders...");
+  const results = [];
   for (const task of PREDEFINED_TASKS) {
     console.log(`👉 Sending: ${task.title}`);
-    await sendTaskMessage(task);
+    const success = await sendTaskMessage(task);
+    results.push({ taskId: task.id, title: task.title, success });
   }
-  res.json({ success: true, message: "All tasks sent manually." });
+  res.json({ success: true, message: "All tasks sent manually.", results });
 });
 
 // === WhatsApp Template Message Test ===
@@ -203,51 +229,70 @@ remainderRouter.post("/send-template", async (req, res) => {
   }
 });
 
-// Checks if a new day has started, resets tracking if needed
-function checkAndResetDay() {
-  const newDateKey = resetDateKey();
-  if (newDateKey !== currentDateKey) {
-    console.log("🌞 New day detected! Resetting sent tasks tracker.");
-    sentTasks.clear();
-    currentDateKey = newDateKey;
-  }
+// Helper function to check if a task should be sent now
+function shouldSendTask(task) {
+  // Parse the task time
+  const [taskHour, taskMinute] = task.time.split(":").map(num => parseInt(num, 10));
+  
+  // Get current time
+  const now = new Date();
+  const currentHour = now.getHours();
+  const currentMinute = now.getMinutes();
+  
+  // Check if the current time matches the task time exactly
+  return currentHour === taskHour && currentMinute === taskMinute;
 }
+
+// Helper function to check if this task was already sent today
+function wasTaskSentToday(taskId) {
+  if (!lastSent[taskId]) {
+    return false;
+  }
+  
+  const lastSentDate = new Date(lastSent[taskId]);
+  const now = new Date();
+  
+  return lastSentDate.getDate() === now.getDate() && 
+         lastSentDate.getMonth() === now.getMonth() && 
+         lastSentDate.getFullYear() === now.getFullYear();
+}
+
+// Reset the lastSent record at midnight
+function scheduleResetForMidnight() {
+  const now = new Date();
+  const night = new Date(
+    now.getFullYear(),
+    now.getMonth(),
+    now.getDate() + 1, // tomorrow
+    0, 0, 0 // midnight
+  );
+  
+  const msToMidnight = night.getTime() - now.getTime();
+  
+  setTimeout(() => {
+    console.log("🌙 Midnight reset: Clearing lastSent record for new day");
+    Object.keys(lastSent).forEach(key => {
+      delete lastSent[key];
+    });
+    scheduleResetForMidnight(); // schedule next reset
+  }, msToMidnight);
+}
+
+// Start the midnight reset scheduler
+scheduleResetForMidnight();
 
 // === Auto CRON Job: Runs Every Minute to Match Task Time ===
 cron.schedule("* * * * *", async () => {
-  try {
-    // Check if it's a new day
-    checkAndResetDay();
-    
-    const now = dayjs();
-    const currentHour = now.hour();
-    const currentMinute = now.minute();
-    const formattedTime = now.format("HH:mm");
-    
-    console.log(`⏳ Checking tasks at: ${formattedTime}`);
-    
-    // Check for tasks that should be sent now
-    for (const task of PREDEFINED_TASKS) {
-      const [taskHour, taskMinute] = task.time.split(":").map(Number);
-      
-      // If this task's time matches the current time and hasn't been sent today
-      if (taskHour === currentHour && taskMinute === currentMinute) {
-        const taskKey = `${currentDateKey}-${task.id}`;
-        
-        // Check if we've already sent this task today
-        if (!sentTasks.has(taskKey)) {
-          console.log(`🔔 Sending task: ${task.title} at ${formattedTime}`);
-          await sendTaskMessage(task);
-          
-          // Mark this task as sent for today
-          sentTasks.add(taskKey);
-        } else {
-          console.log(`⏭️ Task already sent today: ${task.title}`);
-        }
-      }
+  const now = new Date();
+  const formattedTime = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
+  console.log(`⏳ Checking tasks at: ${formattedTime}`);
+
+  for (const task of PREDEFINED_TASKS) {
+    // Only send if this exact time matches the task time and it hasn't been sent today
+    if (shouldSendTask(task) && !wasTaskSentToday(task.id)) {
+      console.log(`🔔 It's time for task: ${task.id} - ${task.title} at ${formattedTime}`);
+      await sendTaskMessage(task);
     }
-  } catch (error) {
-    console.error("❌ Error in cron job:", error);
   }
 });
 

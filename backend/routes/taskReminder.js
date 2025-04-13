@@ -107,8 +107,8 @@ const PREDEFINED_TASKS = [
   {
     id: "goodnight_chinni",
     title: "Sleep with me babe",
-    time: "23:00",
-    endTime: "00:00",
+    time: "22:30",
+    endTime: "23:00",
     type: "rest",
     icon: "🛌",
     message: "Cuddle mode activated 🥰 Close your eyes and dream of us 💖",

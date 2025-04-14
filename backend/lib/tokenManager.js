@@ -227,7 +227,7 @@ export async function refreshAccessToken(retryCount = 3, retryDelay = 1000) {
     
     while (currentRetry < retryCount) {
       try {
-        console.log(`🔄 Requesting new token using ${source.name} (Attempt ${currentRetry + 1}/${retryCount})...`);
+        // console.log(`🔄 Requesting new token using ${source.name} (Attempt ${currentRetry + 1}/${retryCount})...`);
 
         const { data } = await axios.get(`https://graph.facebook.com/v18.0/oauth/access_token`, {
           params: {
@@ -276,8 +276,8 @@ export async function refreshAccessToken(retryCount = 3, retryDelay = 1000) {
             },
             { upsert: true }
           );
-          console.log("🔑 Received long-lived token:", newToken.slice(0, 30) + "...");
-          console.log("📅 Long-lived token expires:", longLivedExpires.toLocaleString());
+          // console.log("🔑 Received long-lived token:", newToken.slice(0, 30) + "...");
+          // console.log("📅 Long-lived token expires:", longLivedExpires.toLocaleString());
           
           return { token: newToken, isLongLived: true, expiresAt: longLivedExpires };
         } else {

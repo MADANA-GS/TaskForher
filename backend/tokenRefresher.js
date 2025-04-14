@@ -17,7 +17,7 @@ cron.schedule("*/1 * * * *", async () => {
 
   try {
     const newdata = await axios.get(url);
-    console.log("Cron fetching data", newdata.data); // log actual response data
+    // console.log("Cron fetching data", newdata.data); // log actual response data
   } catch (error) {
     console.error("Error fetching data:", error);
   }

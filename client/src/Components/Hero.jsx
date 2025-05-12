@@ -22,31 +22,145 @@ const API_BASE = "https://taskforher.onrender.com";
 // Predefined tasks remain the same
 const PREDEFINED_TASKS = [
   {
-    id: "water_morning",
-    title: "Drink water right after waking up",
-    time: "07:00",
-    endTime: "07:30",
-    type: "hydration",
-    icon: "💧",
-    message: "Hey love, time to hydrate that cute body of yours 😘",
-  },
-  {
-    id: "stretch",
-    title: "Do light morning stretches",
+    id: "wake_up",
+    title: "Wake up time",
     time: "07:30",
     endTime: "08:00",
-    type: "exercise",
-    icon: "🧘‍♀️",
-    message: "Let's loosen up those pretty limbs 🌞 You're my yoga queen 😍",
+    type: "routine",
+    icon: "⏰",
+    message:
+      "Wakey wakey, sleepy beauty 😴✨ Time to rise and shine — the world’s luckiest guy is waiting to hear your voice 💖",
   },
   {
-    id: "breakfast",
-    title: "Have a healthy breakfast",
+    id: "brush_water",
+    title: "Brush & Drink water",
     time: "08:00",
-    endTime: "09:00",
+    endTime: "08:15",
+    type: "hygiene",
+    icon: "🪥💧",
+    message:
+      "Scrub-a-dub that perfect smile 💎 and sip some water for that glowing face I love 😍",
+  },
+  {
+    id: "breakfast_time",
+    title: "Lunch Breakfast & Drink water",
+    time: "08:16",
+    endTime: "08:45",
     type: "nutrition",
-    icon: "🥣",
-    message: "Feed that gorgeous soul and body — you're glowing already 🌸✨",
+    icon: "🥣💧",
+    message:
+      "Breakfast fit for a queen 👑 Keep that belly happy, babe — you make even cereal look sexy 😘",
+  },
+  {
+    id: "morning_talk",
+    title: "10-min Morning Talk with Me 💕",
+    time: "08:45",
+    endTime: "08:55",
+    type: "love",
+    icon: "📞💖",
+    message:
+      "Just 10 minutes of your voice = full battery for my heart 💗 Let's smile into the day together 😘",
+  },
+  {
+    id: "water_9am",
+    title: "Drink water",
+    time: "09:00",
+    endTime: "09:30",
+    type: "hydration",
+    icon: "💦",
+    message: "Hydration = hotness boost 🔥 Drink up, sexy soul 💧😘",
+  },
+  {
+    id: "get_ready",
+    title: "Get ready & Drink water",
+    time: "09:30",
+    endTime: "09:50",
+    type: "routine",
+    icon: "💄💧",
+    message:
+      "Slay the day, my gorgeous girl 😍💃 You're the main character and water is your potion!",
+  },
+  {
+    id: "class_time",
+    title: "Class & Drink water",
+    time: "10:00",
+    endTime: "10:15",
+    type: "learning",
+    icon: "🎓💧",
+    message: "Study like a queen 👸 and sip like a diva 💧🔥",
+  },
+  {
+    id: "water_11am",
+    title: "Drink water",
+    time: "11:00",
+    endTime: "11:15",
+    type: "hydration",
+    icon: "🥤",
+    message: "One more sip for the prettiest lips 😘💋",
+  },
+  {
+    id: "water_12pm",
+    title: "Drink water",
+    time: "12:00",
+    endTime: "12:15",
+    type: "hydration",
+    icon: "🚰",
+    message: "Keep glowing, sunshine 🌞 Water = extra sparkle ✨",
+  },
+  {
+    id: "lunch_time",
+    title: "Drink water & Lunch",
+    time: "13:00",
+    endTime: "13:30",
+    type: "nutrition",
+    icon: "🍱💧",
+    message: "Eat well, my hot angel 😇 That smile needs fuel 😍",
+  },
+  {
+    id: "water_2pm",
+    title: "Drink water",
+    time: "14:00",
+    endTime: "14:15",
+    type: "hydration",
+    icon: "🧃",
+    message: "Sip, slay, sparkle 💖 That’s my hydrated queen 👑",
+  },
+  {
+    id: "water_3pm",
+    title: "Drink water",
+    time: "15:00",
+    endTime: "15:15",
+    type: "hydration",
+    icon: "💧",
+    message: "More water, more cuteness overload 💕",
+  },
+  {
+    id: "study_4pm",
+    title: "Study",
+    time: "16:00",
+    endTime: "16:45",
+    type: "learning",
+    icon: "📖",
+    message: "Focus time, smarty pants 😘 You + books = power couple 🧠💖",
+  },
+  {
+    id: "snack_break",
+    title: "Healthy Snack Break 🍎",
+    time: "16:30",
+    endTime: "16:45",
+    type: "nutrition",
+    icon: "🍏🥜",
+    message:
+      "Snack time, sugar pie 😋 Fuel that brilliant brain with a bite of yummy goodness 💪💕",
+  },
+  {
+    id: "study_5pm",
+    title: "Study",
+    time: "17:00",
+    endTime: "17:15",
+    type: "learning",
+    icon: "📘",
+    message: "Short and sweet like you 😍 Let’s hit those goals!",
   },
   {
     id: "churu_love",
@@ -56,25 +170,7 @@ const PREDEFINED_TASKS = [
     type: "love",
     icon: "💗",
     message:
-      "Let's get smarter together, baby. You're going to ace everything! 😘📖",
-  },
-  {
-    id: "water_afternoon",
-    title: "Drink a glass of water",
-    time: "13:00",
-    endTime: "13:15",
-    type: "hydration",
-    icon: "🚰",
-    message: "Midday hydration reminder from your no.1 fan 😘",
-  },
-  {
-    id: "walk",
-    title: "Take a short walk",
-    time: "17:30",
-    endTime: "18:00",
-    type: "exercise",
-    icon: "🚶‍♀️",
-    message: "Take those dreamy steps, queen 💃 The world deserves to see you!",
+      "Your hot man is ready for our love chat 😘 You + Me = fireworks 💥💞",
   },
   {
     id: "water_evening",
@@ -84,27 +180,56 @@ const PREDEFINED_TASKS = [
     type: "hydration",
     icon: "🫗",
     message:
-      "One more sip for that perfect glow ✨ You're too pretty to be dehydrated 😘",
+      "Evening glow booster 🌅 Sip and shine like the goddess you are ✨",
   },
   {
-    id: "study",
-    title: "Study for 1 hour",
-    time: "19:30",
-    endTime: "21:00",
+    id: "study_evening",
+    title: "Drink water & Study",
+    time: "19:00",
+    endTime: "19:30",
     type: "learning",
     icon: "📚",
-    message:
-      "Let's get smarter together, baby. You're going to ace everything! 😘📖",
+    message: "Time to flex that sexy brain again 🧠🔥",
   },
   {
-    id: "sleep_prep",
-    title: "Wind down & prepare for sleep",
-    time: "21:30",
-    endTime: "22:00",
-    type: "rest",
-    icon: "🛌",
+    id: "dinner_time",
+    title: "Dinner & Drink water",
+    time: "19:30",
+    endTime: "21:00",
+    type: "nutrition",
+    icon: "🍽️",
     message:
-      "Wrap up the day, love 💫 You deserve all the peace and sweet dreams 💖",
+      "Dinner date with yourself 😘 You deserve flavor and love every bite 🍜💖",
+  },
+  {
+    id: "fun_break",
+    title: "5-min Fun Break with Me 💖",
+    time: "20:30",
+    endTime: "20:35",
+    type: "love",
+    icon: "🎈💑",
+    message:
+      "Stretch, smile, and send me a voice note 😘 Just 5 minutes to laugh with your biggest fan — me! 🥰🎧",
+  },
+  {
+    id: "study_night",
+    title: "Study",
+    time: "21:00",
+    endTime: "22:00",
+    type: "learning",
+    icon: "📖",
+    message:
+      "You’re slaying even at night 🌙 Studying like the queen you are 😍",
+  },
+  {
+    id: "talk_late",
+    title: "Talk",
+    time: "22:00",
+    endTime: "22:30",
+    type: "love",
+    icon: "💬",
+    message:
+      "Let’s end the day with sweet nothings 💕 I miss you like crazy 😘",
   },
   {
     id: "goodnight_chinni",
@@ -116,6 +241,7 @@ const PREDEFINED_TASKS = [
     message: "Cuddle mode activated 🥰 Close your eyes and dream of us 💖",
   },
 ];
+
 // More subdued color palette
 const TYPE_COLORS = {
   hydration: {
@@ -243,7 +369,7 @@ const Hero = () => {
   // Add a state to track which toasts have been shown
   const [shownToasts, setShownToasts] = useState({});
 
-  const today = new Date(); 
+  const today = new Date();
 
   // Update current time every minute
   useEffect(() => {

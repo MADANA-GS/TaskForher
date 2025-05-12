@@ -20,6 +20,7 @@ import {
 const API_BASE = "https://taskforher.onrender.com";
 
 // Predefined tasks remain the same
+
 const PREDEFINED_TASKS = [
   {
     id: "wake_up",
@@ -37,7 +38,7 @@ const PREDEFINED_TASKS = [
     time: "08:00",
     endTime: "08:15",
     type: "hygiene",
-    icon: "🪥💧",
+    icon: "🪥",
     message:
       "Scrub-a-dub that perfect smile 💎 and sip some water for that glowing face I love 😍",
   },
@@ -47,7 +48,7 @@ const PREDEFINED_TASKS = [
     time: "08:16",
     endTime: "08:45",
     type: "nutrition",
-    icon: "🥣💧",
+    icon: "🥣",
     message:
       "Breakfast fit for a queen 👑 Keep that belly happy, babe — you make even cereal look sexy 😘",
   },
@@ -57,7 +58,7 @@ const PREDEFINED_TASKS = [
     time: "08:45",
     endTime: "08:55",
     type: "love",
-    icon: "📞💖",
+    icon: "📞",
     message:
       "Just 10 minutes of your voice = full battery for my heart 💗 Let's smile into the day together 😘",
   },
@@ -76,7 +77,7 @@ const PREDEFINED_TASKS = [
     time: "09:30",
     endTime: "09:50",
     type: "routine",
-    icon: "💄💧",
+    icon: "💄",
     message:
       "Slay the day, my gorgeous girl 😍💃 You're the main character and water is your potion!",
   },
@@ -86,7 +87,7 @@ const PREDEFINED_TASKS = [
     time: "10:00",
     endTime: "10:15",
     type: "learning",
-    icon: "🎓💧",
+    icon: "🎓",
     message: "Study like a queen 👸 and sip like a diva 💧🔥",
   },
   {
@@ -113,7 +114,7 @@ const PREDEFINED_TASKS = [
     time: "13:00",
     endTime: "13:30",
     type: "nutrition",
-    icon: "🍱💧",
+    icon: "💧",
     message: "Eat well, my hot angel 😇 That smile needs fuel 😍",
   },
   {
@@ -149,7 +150,7 @@ const PREDEFINED_TASKS = [
     time: "16:30",
     endTime: "16:45",
     type: "nutrition",
-    icon: "🍏🥜",
+    icon: "🍏",
     message:
       "Snack time, sugar pie 😋 Fuel that brilliant brain with a bite of yummy goodness 💪💕",
   },
@@ -207,7 +208,7 @@ const PREDEFINED_TASKS = [
     time: "20:30",
     endTime: "20:35",
     type: "love",
-    icon: "🎈💑",
+    icon: "🎈",
     message:
       "Stretch, smile, and send me a voice note 😘 Just 5 minutes to laugh with your biggest fan — me! 🥰🎧",
   },
@@ -241,6 +242,7 @@ const PREDEFINED_TASKS = [
     message: "Cuddle mode activated 🥰 Close your eyes and dream of us 💖",
   },
 ];
+
 
 // More subdued color palette
 const TYPE_COLORS = {
